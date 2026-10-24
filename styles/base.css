@@ -1,0 +1,173 @@
+/* ============================================================
+   咖啡番茄钟 · 设计基础
+   色板：奶油底 / 深咖文字 / 焦糖主色 / 鼠尾草绿 / 浆果红
+   ============================================================ */
+
+:root {
+  --bg: #faf6f1;
+  --bg-soft: #f4ede4;
+  --surface: #ffffff;
+  --surface-2: #f7f1e9;
+  --text: #2e211b;
+  --text-2: #8a7767;
+  --muted: #a89684;
+  --line: #ede3d6;
+  --line-strong: #e2d5c4;
+
+  --caramel: #c68a4e;
+  --caramel-deep: #a96f38;
+  --caramel-soft: #f3e5d3;
+  --sage: #7c8f6b;
+  --sage-soft: #e7ece1;
+  --berry: #c05b4d;
+  --berry-soft: #f6e3df;
+
+  --shadow-sm: 0 1px 2px rgba(46, 33, 27, 0.04), 0 4px 12px rgba(46, 33, 27, 0.05);
+  --shadow-md: 0 1px 2px rgba(46, 33, 27, 0.04), 0 14px 36px rgba(46, 33, 27, 0.1);
+
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-pill: 999px;
+
+  --font-ui: "Inter", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
+  --font-serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-fast: 120ms;
+  --t-base: 200ms;
+  --t-slow: 320ms;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #1b1512;
+  --bg-soft: #221a15;
+  --surface: #251d18;
+  --surface-2: #2d231d;
+  --text: #f3eae1;
+  --text-2: #a89684;
+  --muted: #8d7a68;
+  --line: #3a2e26;
+  --line-strong: #4a3a30;
+
+  --caramel: #d49b5f;
+  --caramel-deep: #e2ae75;
+  --caramel-soft: #3a2b1e;
+  --sage: #93a67f;
+  --sage-soft: #2a3325;
+  --berry: #d0705f;
+  --berry-soft: #3b2421;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 40px rgba(0, 0, 0, 0.4);
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+svg {
+  display: block;
+}
+
+:focus-visible {
+  outline: 2px solid var(--caramel);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+/* 细滚动条，贴合桌面端 */
+.content-panel::-webkit-scrollbar,
+#view-stats::-webkit-scrollbar,
+#view-settings::-webkit-scrollbar,
+#view-today::-webkit-scrollbar {
+  width: 10px;
+}
+
+.content-panel::-webkit-scrollbar-thumb,
+#view-stats::-webkit-scrollbar-thumb,
+#view-settings::-webkit-scrollbar-thumb,
+#view-today::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+/* 数字等宽，计时不抖动 */
+#timerTime,
+.tnum,
+.num,
+.tl-time,
+.round-text {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

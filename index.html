@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23faf6f1'/%3E%3Cpath d='M5 9h10v4.5A4.5 4.5 0 0 1 10.5 18h-1A4.5 4.5 0 0 1 5 13.5V9Z' fill='none' stroke='%23c68a4e' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M15 10h1.6a2.2 2.2 0 0 1 0 4.4H15' fill='none' stroke='%23c68a4e' stroke-width='1.6'/%3E%3C/svg%3E" />
+  <title>咖啡番茄钟</title>
+  <script>
+    /* 首屏前先应用主题，避免浅色闪一下 */
+    (function () {
+      try {
+        var raw = JSON.parse(localStorage.getItem('coffee-pomodoro:v1') || 'null');
+        var theme = (raw && raw.settings && raw.settings.theme) || 'system';
+        var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      } catch (err) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="styles/base.css" />
+  <link rel="stylesheet" href="styles/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z" />
+        <path d="M16 10h2.2a2.6 2.6 0 0 1 0 5.2H16" />
+        <path d="M7.5 3.5c0 1.2-1 1.4-1 2.6" />
+        <path d="M11.5 3.5c0 1.2-1 1.4-1 2.6" />
+      </svg>
+      <span class="brand-name">咖啡番茄钟</span>
+    </div>
+
+    <div class="topbar-stat" aria-live="polite">
+      <span id="topCups">0 杯</span>
+      <span class="dot-sep">·</span>
+      <span id="topMg">0 mg</span>
+    </div>
+
+    <nav class="tabs" aria-label="主导航">
+      <button class="tab is-active" data-view="today" aria-current="page">今日</button>
+      <button class="tab" data-view="stats">统计</button>
+      <button class="tab" data-view="settings">设置</button>
+    </nav>
+  </header>
+
+  <main class="main">
+    <!-- ========== 今日 ========== -->
+    <section class="view is-active" id="view-today">
+      <aside class="timer-panel">
+        <div class="timer-card">
+          <div class="timer-ring-wrap">
+            <svg class="timer-ring" viewBox="0 0 280 280" aria-hidden="true">
+              <circle class="ring-track" cx="140" cy="140" r="130" />
+              <circle class="ring-progress" id="ringProgress" cx="140" cy="140" r="130" />
+            </svg>
+            <div class="timer-readout">
+              <div class="timer-phase" id="timerPhase">准备开始</div>
+              <div class="timer-time" id="timerTime" aria-live="off">25:00</div>
+              <div class="timer-caption" id="timerCaption">专注一件事</div>
+            </div>
+          </div>
+
+          <div class="prep-fields" id="prepFields">
+            <input id="focusLabel" class="field-input" type="text" maxlength="16" placeholder="这次专注做什么（可选）" aria-label="专注标签" />
+            <div class="prep-row">
+              <span class="prep-label" aria-hidden="true">搭配咖啡</span>
+              <select id="pairCoffee" class="prep-select" aria-label="搭配咖啡（可选，默认不喝咖啡）">
+                <option value="">不喝咖啡</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="timer-actions">
+            <button class="btn btn-primary" id="btnPrimary">开始专注</button>
+            <button class="btn btn-ghost is-hidden" id="btnSecondary">放弃</button>
+          </div>
+
+          <div class="round-line">
+            <div class="round-dots" id="roundDots" aria-hidden="true"></div>
+            <span class="round-text" id="roundText">今日 0 / 4 轮</span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="content-panel">
+        <div class="content-inner">
+          <section class="summary" id="summary" aria-label="今日汇总"></section>
+
+          <section class="block">
+            <div class="block-head">
+              <h2 class="block-title">喝一杯</h2>
+              <div class="block-actions">
+                <button class="link-btn is-danger" id="btnResetCoffee" aria-label="重置今日咖啡记录">重置今日咖啡</button>
+                <button class="link-btn" id="btnCustomCoffee">自定义…</button>
+              </div>
+            </div>
+            <div class="chips" id="quickChips"></div>
+          </section>
+
+          <section class="block">
+            <div class="block-head">
+              <h2 class="block-title">今日时间轴</h2>
+              <span class="block-meta" id="timelineMeta"></span>
+            </div>
+            <div class="timeline" id="timeline"></div>
+          </section>
+        </div>
+      </section>
+    </section>
+
+    <!-- ========== 统计 ========== -->
+    <section class="view" id="view-stats">
+      <div class="page-wrap">
+        <div class="page-head">
+          <h1 class="page-title">统计</h1>
+          <div class="seg" id="statMetric" role="tablist" aria-label="统计指标">
+            <button class="seg-btn is-active" data-metric="caffeine" role="tab" aria-selected="true">咖啡因</button>
+            <button class="seg-btn" data-metric="focus" role="tab" aria-selected="false">专注分钟</button>
+          </div>
+        </div>
+
+        <section class="card">
+          <h2 class="card-title">近 7 天</h2>
+          <div class="chart" id="weekChart"></div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">今日咖啡因累积</h2>
+          <div class="chart" id="todayChart"></div>
+          <p class="chart-note" id="residueNote"></p>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">历史</h2>
+          <div class="history" id="historyList"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ========== 设置 ========== -->
+    <section class="view" id="view-settings">
+      <div class="page-wrap">
+        <h1 class="page-title">设置</h1>
+
+        <section class="card">
+          <h2 class="card-title">计时</h2>
+          <div class="row">
+            <label class="row-label" for="setFocus">专注时长<small>分钟</small></label>
+            <input class="num" id="setFocus" type="number" min="1" max="180" step="1" />
+          </div>
+          <div class="row">
+            <label class="row-label" for="setShortBreak">短休息<small>分钟</small></label>
+            <input class="num" id="setShortBreak" type="number" min="1" max="60" step="1" />
+          </div>
+          <div class="row">
+            <label class="row-label" for="setLongBreak">长休息<small>分钟</small></label>
+            <input class="num" id="setLongBreak" type="number" min="1" max="60" step="1" />
+          </div>
+          <div class="row">
+            <label class="row-label" for="setRoundsPerLong">长休息间隔<small>每几轮</small></label>
+            <input class="num" id="setRoundsPerLong" type="number" min="2" max="12" step="1" />
+          </div>
+          <div class="row">
+            <label class="row-label" for="setDailyGoal">每日目标<small>轮</small></label>
+            <input class="num" id="setDailyGoal" type="number" min="1" max="24" step="1" />
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">提醒与上限</h2>
+          <div class="row">
+            <label class="row-label" for="setLimit">每日咖啡因上限<small>mg</small></label>
+            <input class="num" id="setLimit" type="number" min="50" max="1200" step="10" />
+          </div>
+          <div class="row">
+            <span class="row-label">结束提示音</span>
+            <button class="switch" id="setSound" role="switch" aria-checked="true" aria-label="结束提示音"><span></span></button>
+          </div>
+          <div class="row">
+            <span class="row-label">系统通知</span>
+            <button class="switch" id="setNotify" role="switch" aria-checked="true" aria-label="系统通知"><span></span></button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">外观</h2>
+          <div class="row">
+            <label class="row-label" for="setTheme">主题</label>
+            <select class="select" id="setTheme">
+              <option value="system">跟随系统</option>
+              <option value="light">浅色</option>
+              <option value="dark">深色</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">数据</h2>
+          <p class="card-desc">所有记录保存在本机浏览器，不会上传。清理浏览器数据前请先导出备份。</p>
+          <div class="data-actions">
+            <button class="btn btn-ghost btn-sm" id="btnExport">导出 JSON</button>
+            <button class="btn btn-ghost btn-sm" id="btnImport">导入 JSON</button>
+            <button class="btn btn-ghost btn-sm" id="btnClear">清空数据</button>
+            <input type="file" id="fileImport" accept="application/json,.json" hidden />
+          </div>
+          <p class="card-desc disclaimer">咖啡因数值为估算值，仅作记录参考，不构成健康建议。</p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
+  <div class="modal-backdrop is-hidden" id="modalBackdrop">
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></div>
+  </div>
+
+  <script src="js/store.js"></script>
+  <script src="js/coffee.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
